@@ -96,7 +96,11 @@ function NarrowFilters({
   onTagChange,
 }: SidebarProps) {
   const [open, setOpen] = useState(false)
-  const isFiltered = activeCategory !== null || activeTag !== null
+  const activeLabel = activeCategory
+    ? activeCategory
+    : activeTag
+      ? `# ${activeTag}`
+      : null
   const totalCategory = categories.reduce((s, c) => s + c.count, 0)
 
   return (
@@ -124,9 +128,9 @@ function NarrowFilters({
             <line x1="10" y1="18" x2="14" y2="18" />
           </svg>
           필터
-          {isFiltered && (
-            <span className="rounded-full bg-brand text-white text-[10px] font-semibold px-2 py-0.5">
-              활성
+          {activeLabel && (
+            <span className="max-w-[160px] truncate rounded-full bg-brand text-white text-[11px] font-medium px-2 py-0.5">
+              {activeLabel}
             </span>
           )}
         </span>
