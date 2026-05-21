@@ -18,6 +18,18 @@ export default function MyApp({ Component, pageProps }: AppProps) {
         <meta name="description" content={CONFIG.blog.description} />
         <link rel="icon" type="image/webp" href={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/symbol.webp`} />
         <link rel="apple-touch-icon" href={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/symbol.webp`} />
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          href={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/feed.xml`}
+          title={`${CONFIG.blog.title} RSS`}
+        />
+        <link
+          rel="alternate"
+          type="application/atom+xml"
+          href={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/atom.xml`}
+          title={`${CONFIG.blog.title} Atom`}
+        />
         <meta property="og:title" content={CONFIG.blog.title} />
         <meta property="og:description" content={CONFIG.blog.description} />
         <meta property="og:type" content="website" />
