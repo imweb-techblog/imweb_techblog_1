@@ -1,3 +1,4 @@
+import type { ExtendedRecordMap } from "notion-types"
 import { fetchPage } from "./client"
 import { enrichAuthorUsers } from "./enrichUsers"
 import { findPropId, mapBlockToPost, unwrap } from "./mapPage"
@@ -23,7 +24,9 @@ type CollectionQueryResult = {
   collection_group_results?: { blockIds?: string[] }
 }
 
-const extractBlockIds = (query: CollectionQueryResult | undefined): string[] => {
+export const extractBlockIds = (
+  query: CollectionQueryResult | undefined
+): string[] => {
   if (!query) return []
   if (query.blockIds) return query.blockIds
   if (query.collection_group_results?.blockIds)
@@ -31,25 +34,38 @@ const extractBlockIds = (query: CollectionQueryResult | undefined): string[] => 
   return []
 }
 
-const buildSnapshot = async (): Promise<DbSnapshot> => {
-  const recordMap = await fetchPage(CONFIG.notion.databaseId)
+type Collection = {
+  schema: Record<string, { name: string; type: string; options?: unknown }>
+  ids: string[]
+}
+
+// recordMap 에서 첫 컬렉션의 schema 와 (정렬 전) 행 block id 목록을 추출.
+// 네트워크 I/O 없이 순수하게 동작 → 단위 테스트 가능.
+export const extractCollection = (
+  recordMap: ExtendedRecordMap
+): Collection | null => {
   const collectionEntry = Object.entries(recordMap.collection || {})[0]
-  if (!collectionEntry) return { posts: [], categories: [], tags: [] }
+  if (!collectionEntry) return null
   const [collId, collRecord] = collectionEntry
   const collection = unwrap(collRecord)
   const schema = collection?.schema
-  if (!schema) return { posts: [], categories: [], tags: [] }
+  if (!schema) return null
 
   const perView = recordMap.collection_query?.[collId]
-  if (!perView) return { posts: [], categories: [], tags: [] }
-  const firstQuery = Object.values(perView)[0] as CollectionQueryResult | undefined
-  const ids = extractBlockIds(firstQuery)
+  const firstQuery = perView
+    ? (Object.values(perView)[0] as CollectionQueryResult | undefined)
+    : undefined
+  return { schema, ids: extractBlockIds(firstQuery) }
+}
 
-  // 작성자 보강 (notion_user 매핑 추가)
-  const authorPropId = findPropId(schema, ["author", "authors", "작성자"])
-  if (authorPropId) {
-    await enrichAuthorUsers(recordMap, ids, authorPropId)
-  }
+// recordMap → DbSnapshot 순수 변환. 작성자 보강(enrich)은 호출 전에 끝나 있어야 함.
+// 네트워크 I/O 가 없으므로 fixture 만으로 단위 테스트 가능.
+export const snapshotFromRecordMap = (
+  recordMap: ExtendedRecordMap
+): DbSnapshot => {
+  const coll = extractCollection(recordMap)
+  if (!coll) return { posts: [], categories: [], tags: [] }
+  const { schema, ids } = coll
 
   // ── posts ─────────────────────────────────────────────────────────────
   const allPosts: TPost[] = []
@@ -88,6 +104,21 @@ const buildSnapshot = async (): Promise<DbSnapshot> => {
     .sort((a, b) => b.count - a.count)
 
   return { posts, categories, tags }
+}
+
+const buildSnapshot = async (): Promise<DbSnapshot> => {
+  const recordMap = await fetchPage(CONFIG.notion.databaseId)
+
+  // 작성자 보강 (notion_user 매핑 추가) — snapshotFromRecordMap 전에 수행
+  const coll = extractCollection(recordMap)
+  if (coll) {
+    const authorPropId = findPropId(coll.schema, ["author", "authors", "작성자"])
+    if (authorPropId) {
+      await enrichAuthorUsers(recordMap, coll.ids, authorPropId)
+    }
+  }
+
+  return snapshotFromRecordMap(recordMap)
 }
 
 // 단일 진입점. production 에서는 첫 호출만 실제 fetch, 이후엔 메모이즈된 Promise 반환.
