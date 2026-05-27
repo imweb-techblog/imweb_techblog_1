@@ -53,7 +53,7 @@ imweb_techblog_1/
 │   │   │   ├── Sidebar.tsx          카테고리/태그 필터 (lg+ sticky 좌측, < lg 토글)
 │   │   │   ├── PostGrid.tsx         글 목록 + 그리드/리스트 뷰 토글 + 페이지네이션(9개/페이지)
 │   │   │   ├── PostCard.tsx           ↳ 그리드 뷰의 카드 (썸네일 16:10)
-│   │   │   └── PostListItem.tsx       ↳ 리스트 뷰의 행 (인셋 썸네일 16:10)
+│   │   │   └── PostListItem.tsx       ↳ 리스트 뷰의 행 (썸네일 16:10, 카드에 flush)
 │   │   ├── layout/
 │   │   │   ├── Header.tsx           로고(SVG) + 네비 + 검색 + 테마 토글 (<sm 은 햄버거+검색바)
 │   │   │   ├── ThemeToggle.tsx      라이트/다크 전환 버튼
