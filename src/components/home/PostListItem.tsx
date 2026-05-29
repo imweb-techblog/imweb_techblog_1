@@ -23,7 +23,7 @@ export default function PostListItem({ post }: { post: TPost }) {
         />
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 sm:gap-1.5 px-4 sm:px-5 py-3 sm:py-0">
+      <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 sm:gap-1.5 px-4 sm:px-5 py-5 sm:py-0">
         <div>
           {post.category && (
             <div className="mb-0 sm:mb-1 text-[11px] font-semibold tracking-wider uppercase text-brand">
